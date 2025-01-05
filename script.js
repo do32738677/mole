@@ -1,73 +1,98 @@
-// 遊戲變數
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const scoreElement = document.getElementById("score");
+const timeElement = document.getElementById("time");
+const easyHighScoreElement = document.getElementById("easy-high-score");
+const hardHighScoreElement = document.getElementById("hard-high-score");
+
 let score = 0;
-let time = 30;
-let moleX = 0;
-let moleY = 0;
-let moleSize = 50;
-let timer;
-let canvas = document.getElementById('gameCanvas');
-let ctx = canvas.getContext('2d');
+let timeRemaining = 30;
+let moleX, moleY;
+let gameInterval;
+let mode = "easy";
+let highScores = { easy: 0, hard: 0 };
 
-// 遊戲初始化
-function startGame() {
+// 載入圖片
+const moleImage = new Image();
+moleImage.src = "./images/mole.png";
+
+const redMoleImage = new Image();
+redMoleImage.src = "./images/redmole.png";
+
+const goldMoleImage = new Image();
+goldMoleImage.src = "./images/goldmole.png";
+
+const burrowImage = new Image();
+burrowImage.src = "./images/burrow.png";
+
+const backgroundImage = new Image();
+backgroundImage.src = "./images/background.png";
+
+// 遊戲開始
+function startGame(selectedMode) {
+    mode = selectedMode;
     score = 0;
-    time = 30;
+    timeRemaining = 30;
+    scoreElement.textContent = `分數: ${score}`;
+    timeElement.textContent = `剩餘時間: ${timeRemaining} 秒`;
 
-    document.getElementById('menu').style.display = 'none';
-    document.getElementById('gameArea').style.display = 'block';
+    document.getElementById("main-menu").style.display = "none";
+    document.getElementById("game-container").style.display = "block";
 
-    document.getElementById('currentScore').innerText = score;
-    document.getElementById('remainingTime').innerText = time;
-
+    gameInterval = setInterval(updateTime, 1000);
     spawnMole();
-    timer = setInterval(updateTime, 1000);
 }
 
 // 更新時間
 function updateTime() {
-    time--;
-    document.getElementById('remainingTime').innerText = time;
+    timeRemaining--;
+    timeElement.textContent = `剩餘時間: ${timeRemaining} 秒`;
 
-    if (time <= 0) {
-        clearInterval(timer);
-        alert('遊戲結束！分數: ' + score);
-        endGame();
+    if (timeRemaining <= 0) {
+        clearInterval(gameInterval);
+        alert(`遊戲結束！你的分數是 ${score} 分`);
+        goBack();
     }
 }
 
-// 隨機生成地鼠
+// 出現地鼠
 function spawnMole() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
 
-    moleX = Math.random() * (canvas.width - moleSize);
-    moleY = Math.random() * (canvas.height - moleSize);
+    moleX = Math.random() * (canvas.width - 50);
+    moleY = Math.random() * (canvas.height - 50);
 
-    ctx.fillStyle = "brown"; // 地鼠顏色
-    ctx.fillRect(moleX, moleY, moleSize, moleSize);
+    ctx.drawImage(moleImage, moleX, moleY, 50, 50);
 }
 
-// 點擊檢測
-canvas.addEventListener('click', function (e) {
+// 點擊事件
+canvas.addEventListener("click", (e) => {
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
 
-    if (x >= moleX && x <= moleX + moleSize && y >= moleY && y <= moleY + moleSize) {
+    const hit = clickX >= moleX && clickX <= moleX + 50 && clickY >= moleY && clickY <= moleY + 50;
+    if (hit) {
         score++;
-        document.getElementById('currentScore').innerText = score;
-        spawnMole(); // 點到地鼠就重生
+        scoreElement.textContent = `分數: ${score}`;
+        spawnMole();
     }
 });
 
-// 重新開始遊戲
-function restartGame() {
-    clearInterval(timer);
-    startGame();
+// 回到主選單
+function goBack() {
+    clearInterval(gameInterval);
+    document.getElementById("game-container").style.display = "none";
+    document.getElementById("main-menu").style.display = "block";
 }
 
-// 結束遊戲
-function endGame() {
-    clearInterval(timer);
-    document.getElementById('gameArea').style.display = 'none';
-    document.getElementById('menu').style.display = 'block';
+// 重新開始
+function restartGame() {
+    startGame(mode);
+}
+
+// 離開遊戲
+function exitGame() {
+    alert("謝謝遊玩！");
+    window.close();
 }
